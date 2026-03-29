@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+env/
+venv/
+
+# Django
+*.sqlite3
+media/
+static/
+
+# Environment variables – NIEMALS in Git!
+.env
+
+# Docker
+*.log
