@@ -1,3 +1,27 @@
 from django.db import models
 
-# Create your models here.
+
+class Genre(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Video(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, related_name='videos')
+    video_file = models.FileField(upload_to='videos/originals/')
+    thumbnail = models.ImageField(upload_to='videos/thumbnails/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    hls_480p = models.FileField(upload_to='videos/hls/', blank=True, null=True)
+    hls_720p = models.FileField(upload_to='videos/hls/', blank=True, null=True)
+    hls_1080p = models.FileField(upload_to='videos/hls/', blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
