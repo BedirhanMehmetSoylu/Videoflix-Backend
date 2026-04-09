@@ -27,8 +27,13 @@ class VideoUploadView(APIView):
         if not serializer.is_valid():
             return Response({'detail': 'Please check your input.'}, status=status.HTTP_400_BAD_REQUEST)
         video = serializer.save()
-        process_video(video.id)
-        video.refresh_from_db()
+        if os.environ.get('USE_POSTGRES') == 'true':
+            import django_rq
+            queue = django_rq.get_queue('default')
+            queue.enqueue(process_video, video.id)
+        else:
+            process_video(video.id)
+            video.refresh_from_db()
         return Response(VideoUploadSerializer(video, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
