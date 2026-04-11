@@ -2,6 +2,8 @@ from django.db import models
 
 
 class Genre(models.Model):
+    """Represents a video genre category."""
+
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -9,13 +11,14 @@ class Genre(models.Model):
 
 
 class Video(models.Model):
+    """Represents a video with its metadata and HLS stream files."""
+
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, related_name='videos')
     video_file = models.FileField(upload_to='videos/originals/')
     thumbnail = models.ImageField(upload_to='videos/thumbnails/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
     hls_480p = models.FileField(upload_to='videos/hls/', blank=True, null=True)
     hls_720p = models.FileField(upload_to='videos/hls/', blank=True, null=True)
     hls_1080p = models.FileField(upload_to='videos/hls/', blank=True, null=True)

@@ -4,12 +4,16 @@ from .models import Video, Genre
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
+    """Admin configuration for the Genre model."""
+
     list_display = ('id', 'name')
     search_fields = ('name',)
 
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
+    """Admin configuration for the Video model."""
+
     list_display = ('id', 'title', 'genre', 'created_at')
     list_filter = ('genre',)
     search_fields = ('title', 'description')
