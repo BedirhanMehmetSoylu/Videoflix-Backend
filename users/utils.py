@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.conf import settings
+from django.template.loader import render_to_string
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 
@@ -23,28 +24,37 @@ class CookieJWTAuthentication(JWTAuthentication):
 
 
 def send_confirmation_email(user):
-    """Send account activation email with a unique confirmation link."""
+    """Send account activation email with HTML template."""
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     link = f"{settings.FRONTEND_URL}/pages/auth/activate.html?uid={uid}&token={token}"
+    html_message = render_to_string('emails/confirmation_email.html', {
+        'user_email': user.email,
+        'activation_link': link,
+    })
     send_mail(
         subject='Confirm your Videoflix account',
         message=f'Please click the link to activate your account: {link}',
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
+        html_message=html_message,
     )
 
 
 def send_password_reset_email(user):
-    """Send password reset email with a unique reset link."""
+    """Send password reset email with HTML template."""
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
-    link = f"{settings.FRONTEND_URL}/pages/auth/reset-password.html?uid={uid}&token={token}"
+    link = f"{settings.FRONTEND_URL}/pages/auth/confirm_password.html?uid={uid}&token={token}"
+    html_message = render_to_string('emails/password_reset_email.html', {
+        'reset_link': link,
+    })
     send_mail(
         subject='Reset your Videoflix password',
         message=f'Please click the link to reset your password: {link}',
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
+        html_message=html_message,
     )
 
 

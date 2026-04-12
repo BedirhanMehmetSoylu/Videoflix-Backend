@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
@@ -28,10 +29,8 @@ class RegisterView(APIView):
 class ActivateAccountView(APIView):
     """Handle account activation via email link."""
 
-    def post(self, request):
+    def get(self, request, uid, token):
         """Activate user account using uid and token from the confirmation email."""
-        uid = request.data.get('uid')
-        token = request.data.get('token')
         user = get_user_from_uid(uid)
         if not user:
             return Response({'detail': 'Invalid activation link.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -59,6 +58,7 @@ class LoginView(APIView):
 
 class LogoutView(APIView):
     """Handle user logout and token blacklisting."""
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """Blacklist the refresh token and delete auth cookies."""
