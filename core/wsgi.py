@@ -55,7 +55,12 @@ def _start_inprocess_rq_worker():
         conn = Redis.from_url(redis_url)
         queue = Queue('default', connection=conn)
         worker = NoSignalWorker([queue], connection=conn)
-        worker.work(with_scheduler=True)
+        # No scheduler: this project only ever does immediate enqueue()
+        # calls (see videos/utils.py), never scheduled/delayed jobs. The
+        # scheduler polls Redis continuously in the background even when
+        # nothing is scheduled, which burned through the entire Upstash
+        # free-tier monthly command quota within days for zero real benefit.
+        worker.work(with_scheduler=False)
 
     thread = threading.Thread(target=run_worker, daemon=True)
     thread.start()
