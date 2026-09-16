@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from django.conf import settings
-import django_rq
+import imageio_ffmpeg
 
 
 def convert_to_hls(video_path, output_dir, resolution, bitrate):
@@ -20,8 +20,14 @@ def convert_to_hls(video_path, output_dir, resolution, bitrate):
 
     scale = resolution_map[resolution]
 
+    # Render's native Python runtime has no system ffmpeg binary (that's
+    # only available with a Docker runtime). imageio-ffmpeg ships a static
+    # ffmpeg binary as part of the pip package, so this works without any
+    # system dependency or Aptfile.
+    ffmpeg_binary = imageio_ffmpeg.get_ffmpeg_exe()
+
     command = [
-        'ffmpeg',
+        ffmpeg_binary,
         '-i', video_path,
         '-vf', f'scale={scale}',
         '-b:v', bitrate,
@@ -85,6 +91,14 @@ def process_video(video_id):
 
 def enqueue_video_processing(video_id):
     """Add video processing to the RQ background queue."""
+
+    # Deferred import: django_rq (and the underlying rq library) tries to
+    # use multiprocessing.get_context('fork') on import, which does not
+    # exist on Windows. Importing it here, only when a video is actually
+    # uploaded, means local Windows development never triggers this crash
+    # (it's only hit on Render/Linux, where REDIS_URL is set and this
+    # function actually runs).
+    import django_rq
 
     queue = django_rq.get_queue('default')
     queue.enqueue(process_video, video_id)
