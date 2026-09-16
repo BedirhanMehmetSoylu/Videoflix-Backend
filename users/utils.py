@@ -60,19 +60,19 @@ def send_password_reset_email(user):
 
 
 def set_auth_cookies(response, tokens):
-    """Set JWT access and refresh tokens as HttpOnly cookies on the response."""
+    """Set the JWT access and refresh tokens as HttpOnly cookies on the response."""
     response.set_cookie(
         key='access_token',
         value=str(tokens.access_token),
         httponly=True,
-        samesite='Lax',
-        secure=False,
+        samesite='None',
+        secure=True,
     )
     response.set_cookie(
         key='refresh_token',
         value=str(tokens),
         httponly=True,
-        samesite='Lax',
-        secure=False,
+        samesite='None',
+        secure=True,
     )
     return response
