@@ -8,11 +8,29 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+import socket
 import threading
 
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+
+# Prime Python's DNS/encoding machinery (encodings.idna) in this single
+# main thread BEFORE the background worker thread starts below.
+#
+# Without this, the first ever socket.getaddrinfo() call (e.g. when the
+# admin panel enqueues a video processing job and connects to Redis for
+# the first time) triggers a one-time, non-thread-safe module import deep
+# inside Python's standard library. If the background RQ worker thread
+# happens to trigger the same first-time import at the same moment, both
+# threads can deadlock on Python's per-module import lock - this
+# reproduced 100% of the time on the first video upload after a restart.
+# Doing this import once, here, single-threaded, means it's already
+# cached in sys.modules before any other thread can race for it.
+try:
+    socket.getaddrinfo('localhost', 80)
+except Exception:
+    pass
 
 application = get_wsgi_application()
 
