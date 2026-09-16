@@ -31,6 +31,14 @@ def convert_to_hls(video_path, output_dir, resolution, bitrate):
         '-i', video_path,
         '-vf', f'scale={scale}',
         '-b:v', bitrate,
+        # Limit encoder threads: ffmpeg auto-detects far more CPU cores than
+        # this container actually has available (Render Starter = 0.5 vCPU,
+        # 512 MB RAM). Each x264 thread allocates its own lookahead buffers,
+        # so an unthrottled thread count can exceed the memory limit and
+        # get the whole process OOM-killed by Render mid-encode - this
+        # reproduced 100% of the time on the 720p/1080p passes.
+        '-threads', '2',
+        '-preset', 'veryfast',
         '-hls_time', '10',
         '-hls_playlist_type', 'vod',
         '-hls_segment_filename',
