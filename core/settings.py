@@ -175,7 +175,11 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# On Render, this is set to the mount path of a Persistent Disk (e.g.
+# /var/data), so uploaded videos and processed HLS files survive deploys
+# and restarts. Render's default local disk is ephemeral and gets wiped on
+# every deploy. Locally, this falls back to a regular folder in the project.
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / "media"))
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
