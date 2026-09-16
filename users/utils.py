@@ -32,13 +32,20 @@ def send_confirmation_email(user):
         'user_email': user.email,
         'activation_link': link,
     })
-    send_mail(
+    result = send_mail(
         subject='Confirm your Videoflix account',
         message=f'Please click the link to activate your account: {link}',
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
         html_message=html_message,
     )
+
+    print("EMAIL BACKEND:", settings.EMAIL_BACKEND)
+    print("EMAIL HOST:", settings.EMAIL_HOST)
+    print("EMAIL PORT:", settings.EMAIL_PORT)
+    print("EMAIL USER:", settings.EMAIL_HOST_USER)
+    print("DEFAULT FROM:", settings.DEFAULT_FROM_EMAIL)
+    print("EMAIL SEND RESULT:", result)
 
 
 def send_password_reset_email(user):
