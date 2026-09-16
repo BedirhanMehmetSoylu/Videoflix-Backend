@@ -1,3 +1,4 @@
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -53,6 +54,43 @@ class LoginView(APIView):
             return Response({'detail': 'Please check your input.'}, status=status.HTTP_401_UNAUTHORIZED)
         tokens = RefreshToken.for_user(user)
         response = Response({'detail': 'Login successful.'}, status=status.HTTP_200_OK)
+        return set_auth_cookies(response, tokens)
+
+
+class GuestLoginView(APIView):
+    """Handle guest login using credentials stored in environment variables."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """Authenticate the predefined guest account and set JWT cookies."""
+        email = os.environ.get('GUEST_EMAIL')
+        password = os.environ.get('GUEST_PASSWORD')
+
+        if not email or not password:
+            return Response(
+                {'detail': 'Guest login is not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        user = authenticate(
+            request,
+            username=email,
+            password=password
+        )
+
+        if not user:
+            return Response(
+                {'detail': 'Guest login is currently unavailable.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        tokens = RefreshToken.for_user(user)
+        response = Response(
+            {'detail': 'Guest login successful.'},
+            status=status.HTTP_200_OK
+        )
+
         return set_auth_cookies(response, tokens)
 
 
