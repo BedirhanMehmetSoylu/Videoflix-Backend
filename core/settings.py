@@ -110,6 +110,14 @@ if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
     }
+    # Neon (our Postgres provider) proactively closes idle connections to
+    # save resources. Our background RQ worker keeps a DB connection open
+    # for up to conn_max_age (600s) between jobs; if Neon closes it in the
+    # meantime, Django would otherwise try to reuse the now-dead connection
+    # and crash with "SSL connection has been closed unexpectedly".
+    # CONN_HEALTH_CHECKS makes Django ping the connection before reuse and
+    # transparently reconnect if it's stale, instead of erroring out.
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
     DATABASES = {
         "default": {
